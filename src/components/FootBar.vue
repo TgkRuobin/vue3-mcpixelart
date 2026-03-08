@@ -8,9 +8,9 @@ const version = constant.version
     <div class="flex frow gover">
       <div class="flex frow">
         <img src="@/assets/img/beian.png" height="16" width="16">
-        <a href="https://beian.mps.gov.cn/#/query/webSearch?code=51012402001360" rel="noreferrer" target="_blank">川公网安备51012402001360</a>
+        <a href="https://beian.mps.gov.cn/#/query/webSearch?code=44030002010323" rel="noreferrer" target="_blank">粤公网安备44030002010323号</a>
       </div>
-      <a href="https://beian.miit.gov.cn" target="_blank">蜀ICP备2024071913号-2</a>
+      <a href="https://beian.miit.gov.cn" target="_blank">粤ICP备2026011370号-1</a>
     </div>
     <div class="flex frow webv">
       <router-link to="/version">版本 {{ version }}</router-link>
