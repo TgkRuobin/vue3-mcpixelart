@@ -3,6 +3,10 @@ from flask import Blueprint, request
 import json
 from datetime import datetime
 
+import logging
+
+logger = logging.getLogger('gunicorn.error')
+
 error_bp = Blueprint('error', __name__, url_prefix='/error')
 
 LOG_FILE = 'error_log.jsonl'
@@ -22,5 +26,5 @@ def post_err():
     return 'OK', 200
 
   except Exception as e:
-    print(str(e))
+    logger.error(str(e))
     return 'Not recorded', 200

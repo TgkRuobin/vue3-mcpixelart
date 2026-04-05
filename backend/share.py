@@ -2,6 +2,10 @@ from utils.db import query, exec
 from flask import Blueprint, request
 import os
 
+import logging
+
+logger = logging.getLogger('gunicorn.error')
+
 share_bp = Blueprint('share', __name__, url_prefix='/share')
 
 FEED_MAX_LEN = os.getenv('FEED_MAX_LEN')
@@ -41,7 +45,7 @@ def get_feed():
             return {'error': '读取数据库失败'}, 500
 
     except Exception as e:
-        print('[error] feed >', str(e))
+        logger.error('feed >', str(e))
         return {'error': '获取内容列表失败'}, 500
 
 # 分享作品 / 取消分享作品
@@ -77,5 +81,5 @@ def post_share():
         else:
             return {'error': '用户未登录'}, 401
     except Exception as e:
-        print('[error] share >', str(e))
+        logger.error('share >', str(e))
         return {'error': '分享失败'}, 500

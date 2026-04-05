@@ -7,6 +7,10 @@ import gzip
 import os
 import re
 
+import logging
+
+logger = logging.getLogger('gunicorn.error')
+
 pixelart_bp = Blueprint('pixelart', __name__, url_prefix='/')
 
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
@@ -81,7 +85,7 @@ def check_matrix(variable):
     # 检查矩阵的每一维的大小是否在 1 到 PIXEL_MAX_LEN 之间
     if not (1 <= num_rows <= PIXEL_MAX_LEN and 1 <= num_cols <= PIXEL_MAX_LEN):
         return False, f"尺寸超出了{PIXEL_MAX_LEN}px"
-    # print(f"Image size:{num_cols}*{num_rows}")
+    # logger.log(f"Image size:{num_cols}*{num_rows}")
     return True, '图像正确'
 
 def backup_img(fname,arr):
@@ -126,7 +130,7 @@ def pixel_post():
         else:
             return jsonify({'error': '无效请求'}), 400
     except Exception as e:
-        print('[error] pixelart >', str(e))
+        logger.error('pixelart >', str(e))
         return jsonify({'error': f'请求失败'}), 400
 
 def backup_scu(fname,arr):
@@ -197,7 +201,7 @@ def scu_post():
         else:
             return jsonify({'error': '无效请求'}), 400
     except Exception as e:
-        print('[error] sculpture >', str(e))
+        logger.error('sculpture >', str(e))
         return jsonify({'error': f'请求失败'}), 400
 
 @pixelart_bp.route('/reload', methods=['GET'])
@@ -217,5 +221,5 @@ def reload():
         else:
             return jsonify({"error": "链接不存在"}), 404
     except Exception as e:
-        print('[error] reload >', str(e))
+        logger.error('reload >', str(e))
         return jsonify({'error': f'请求失败'}), 400

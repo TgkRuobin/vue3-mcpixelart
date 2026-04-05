@@ -6,6 +6,10 @@ from flask import Flask, request
 import gzip
 import io
 
+import logging
+
+logger = logging.getLogger('gunicorn.error')
+
 app = Flask(__name__)
 
 from user import user_bp
@@ -41,6 +45,6 @@ def auto_decompress_middleware():
             request.environ['CONTENT_LENGTH'] = str(len(decompressed_data))
 
         except Exception as e:
-            print(f"Decompression failed: {e}")
+            logger.error(f"Decompression failed: {e}")
             return {'error': '数据解压失败'}, 500
     

@@ -8,6 +8,10 @@ import uuid
 import gzip
 import os
 
+import logging
+
+logger = logging.getLogger('gunicorn.error')
+
 enhance_bp = Blueprint('enhance', __name__, url_prefix='/')
 
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
@@ -48,5 +52,5 @@ def scu_post():
     else:
       return jsonify({'error': f'无效请求'}), 400
   except Exception as e:
-    print('[error] enhance >', str(e))
+    logger.error('enhance >', str(e))
     return jsonify({'error': '生成失败'}), 400

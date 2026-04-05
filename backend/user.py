@@ -3,6 +3,9 @@ from utils.net import get_ip, get_uid_from_uuid
 from flask import Blueprint, request
 import time
 import uuid
+import logging
+
+logger = logging.getLogger('gunicorn.error')
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -25,7 +28,7 @@ def get_unique_user_id():
         else:
             return {'error': '生成用户标识失败'}, 500
     except Exception as e:
-        print('[error] genid >', str(e))
+        logger.error('genid >', str(e))
         return {'error': '生成用户标识失败'}, 500
 
 # 改名
@@ -46,7 +49,7 @@ def post_change_user_name():
         else:
             return {'error': '未登录用户'}, 401
     except Exception as e:
-        print('[error] cname >', str(e))
+        logger.error('cname >', str(e))
         return {'error': '更改失败'}, 500
 
 # 历史作品
@@ -64,7 +67,7 @@ def get_history():
             return {'error': '读取数据库失败'}, 500
         
     except Exception as e:
-        print('[error] history >', str(e))
+        logger.error('history >', str(e))
         return {'error': '获取内容列表失败'}, 500
 
 # 从uid获得uname
@@ -80,7 +83,7 @@ def get_uname_from_uid():
         else:
             return {'error': '未找到'}, 400
     except Exception as e:
-        print('[error] uname >', str(e))
+        logger.error('uname >', str(e))
         return {'error': '查询出错'}, 500
     
 # 从uuid登录
@@ -96,7 +99,7 @@ def get_login():
         else:
             return {'error': '未找到'}, 400
     except Exception as e:
-        print('[error] login >', str(e))
+        logger.error('login >', str(e))
         return {'error': '查询出错'}, 500
     
 # 点赞
@@ -127,7 +130,7 @@ def post_plg_like():
         else:
             return {'error': '未登录用户'}, 401
     except Exception as e:
-        print('[error] like >', str(e))
+        logger.error('like >', str(e))
         return {'error': '服务器出错了'}, 500
 
 # 踩
@@ -151,7 +154,7 @@ def post_plg_dislike():
         else:
             return {'error': '未登录用户'}, 401
     except Exception as e:
-        print('[error] dislike >', str(e))
+        logger.error('dislike >', str(e))
         return {'error': '服务器出错了'}, 500
 
 # 通过uid获取用户名
@@ -172,5 +175,5 @@ def post_get_uname_list():
         else:
             return {'error': '未登录用户'}, 401
     except Exception as e:
-        print('[error] unamelist >', str(e))
+        logger.error('unamelist >', str(e))
         return {'error': '服务器查询出错'}, 500

@@ -6,6 +6,10 @@ import gzip
 import os
 import math
 
+import logging
+
+logger = logging.getLogger('gunicorn.error')
+
 music_bp = Blueprint('music', __name__, url_prefix='/')
 
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
@@ -198,5 +202,5 @@ def music_post():
     return jsonify({'url': fname}), 200
 
   except Exception as e:
-    print('[error] musicGen >', str(e))
+    logger.error('musicGen >', str(e))
     return jsonify({'error': f'制作出错'}), 400
