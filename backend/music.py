@@ -6,7 +6,7 @@ import gzip
 import os
 import math
 
-music_bp = Blueprint('/', __name__)
+music_bp = Blueprint('music', __name__, url_prefix='/')
 
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
 

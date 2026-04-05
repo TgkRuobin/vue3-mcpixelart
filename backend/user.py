@@ -4,7 +4,7 @@ from flask import Blueprint, request
 import time
 import uuid
 
-user_bp = Blueprint('/user', __name__)
+user_bp = Blueprint('user', __name__, url_prefix='/user')
 
 def generate_user_id():
   timestamp = int(time.time() * 1000)

@@ -8,12 +8,12 @@ import io
 
 app = Flask(__name__)
 
-from .user import user_bp
-from .error import error_bp
-from .pixelart import pixelart_bp
-from .music import music_bp
-from .enhance import enhance_bp
-from .share import share_bp
+from user import user_bp
+from error import error_bp
+from pixelart import pixelart_bp
+from music import music_bp
+from enhance import enhance_bp
+from share import share_bp
 
 app.register_blueprint(user_bp)
 app.register_blueprint(error_bp)

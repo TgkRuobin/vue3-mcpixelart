@@ -3,7 +3,7 @@ from flask import Blueprint, request
 import json
 from datetime import datetime
 
-error_bp = Blueprint('error', __name__)
+error_bp = Blueprint('error', __name__, url_prefix='/error')
 
 LOG_FILE = 'error_log.jsonl'
 

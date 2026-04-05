@@ -8,7 +8,7 @@ import uuid
 import gzip
 import os
 
-enhance_bp = Blueprint('/', __name__)
+enhance_bp = Blueprint('enhance', __name__, url_prefix='/')
 
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
 ENHANCE_MAX_LEN = os.getenv('ENHANCE_MAX_LEN')

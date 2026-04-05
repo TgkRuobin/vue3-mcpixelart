@@ -2,7 +2,7 @@ from utils.db import query, exec
 from flask import Blueprint, request
 import os
 
-share_bp = Blueprint('/share', __name__)
+share_bp = Blueprint('share', __name__, url_prefix='/share')
 
 FEED_MAX_LEN = os.getenv('FEED_MAX_LEN')
 

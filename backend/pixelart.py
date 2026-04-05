@@ -7,7 +7,7 @@ import gzip
 import os
 import re
 
-pixelart_bp = Blueprint('/', __name__)
+pixelart_bp = Blueprint('pixelart', __name__, url_prefix='/')
 
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
 PIXEL_MAX_LEN = os.getenv('PIXEL_MAX_LEN')
