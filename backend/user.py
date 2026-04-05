@@ -1,22 +1,23 @@
 from utils.db import query, exec
-from utils.net import get_ip, get_uid_from_uuid, new_art, get_unique_filename
-from flask import Flask, request, jsonify
+from utils.net import get_ip, get_uid_from_uuid
+from flask import Blueprint, request
 import time
 import uuid
 
-app = Flask(__name__)
+user_bp = Blueprint('/user', __name__)
 
 def generate_user_id():
   timestamp = int(time.time() * 1000)
   uuid_part = str(uuid.uuid4()).replace('-', '')
   user_id = f"{timestamp}{uuid_part}"
   return user_id
+
 # 生成新用户
-@app.route('/genid', methods=['GET'])
+@user_bp.route('/genid', methods=['GET'])
 def get_unique_user_id():
     try:
         userid = generate_user_id()
-        uname = '用户' + userid[9:15]
+        uname = '用户' + userid[5:15]
         uip = get_ip(request)
         bk = exec('insert into user (uuid,uname,uip) values (%s,%s,%s)', (userid,uname,uip))
         if bk['ok']:
@@ -24,10 +25,11 @@ def get_unique_user_id():
         else:
             return {'error': '生成用户标识失败'}, 500
     except Exception as e:
+        print('[error] genid >', str(e))
         return {'error': '生成用户标识失败'}, 500
-  
+
 # 改名
-@app.route('/cname', methods=['POST'])
+@user_bp.route('/cname', methods=['POST'])
 def post_change_user_name():
     try:
         x_ident = request.headers.get('X-IDENT')
@@ -44,49 +46,11 @@ def post_change_user_name():
         else:
             return {'error': '未登录用户'}, 401
     except Exception as e:
+        print('[error] cname >', str(e))
         return {'error': '更改失败'}, 500
-  
-# feed
-@app.route('/feed', methods=['GET'])
-def get_feed():
-    try:
-        # 查询返回的最大数量 = 30 pages
-        MAX_FEED = 12 * 30
-        filter = request.args.get('filter', default=None)
-        sort = request.args.get('sort', default=None)
-        allow_filter = ['all', 'art', 'enhance', 'sculpture', 'music']
-        allow_sort = ['hot', 'new', 'random']
-        if (not filter in allow_filter) or (not sort in allow_sort):
-            return {'error': '错误的参数'}, 400
-
-        statement_sort = ''
-        if sort == 'new':
-            statement_sort = 'ORDER BY atime DESC'
-        elif sort == 'hot':
-            statement_sort = 'ORDER BY alike DESC'
-        else:
-            statement_sort = 'ORDER BY RAND()'
-        
-        statement_filter = ''
-        if filter == 'all':
-            statement_filter = f'1=%s'
-            filter = 1
-        else:
-            statement_filter = f'atype=%s'
-        cmd = f'SELECT adesc AS desciption,aid AS id,afname AS fname,alike AS hot,aname AS name,atype AS type,atime AS time,auid AS uid FROM art WHERE avisiable=1 AND ashare=1 AND {statement_filter} {statement_sort} LIMIT %s'
-        bk = query(cmd,(filter,MAX_FEED))
-        if bk['ok']:
-            result = bk['result']
-            return result, 200
-        else:
-            reason = bk['reason']
-            return {'error': '读取数据库失败'}, 500
-        
-    except Exception as e:
-        return {'error': '获取内容列表失败'}, 500
 
 # 历史作品
-@app.route('/history', methods=['GET'])
+@user_bp.route('/history', methods=['GET'])
 def get_history():
     try:
         x_ident = request.headers.get('X-IDENT')
@@ -100,45 +64,11 @@ def get_history():
             return {'error': '读取数据库失败'}, 500
         
     except Exception as e:
+        print('[error] history >', str(e))
         return {'error': '获取内容列表失败'}, 500
 
-# 分享作品 / 取消分享作品
-@app.route('/share', methods=['POST'])
-def post_share():
-    try:
-        x_ident = request.headers.get('X-IDENT')
-        if x_ident:
-            data = request.get_json()
-            if 'fname' in data and 'name' in data and 'desc' in data:
-                name = data['name']
-                desc = data['desc']
-                if len(name) >= 20 or len(desc) >= 100:
-                    return {'error': '非法请求'}, 403
-                fname = data['fname']
-                cmd_query = 'SELECT * FROM art WHERE afname=%s AND auuid=%s'
-                bk_query = query(cmd_query, (fname, x_ident))
-                if bk_query['ok'] and len(bk_query['result']) > 0:
-                    if 'share' in data and data['share'] == False:
-                        cmd_share = 'UPDATE art SET ashare=%s WHERE afname=%s AND auuid=%s'
-                        bk_share = exec(cmd_share, (0, fname, x_ident))
-                    else:
-                        cmd_share = 'UPDATE art SET ashare=%s,aname=%s,adesc=%s WHERE afname=%s AND auuid=%s'
-                        bk_share = exec(cmd_share, (1, name, desc,fname, x_ident))
-                    if bk_share['ok']:
-                        return '分享成功', 200
-                    else:
-                        return {'error': '数据库操作失败;分享失败'}, 400
-                else:
-                    return {'error': '作品不存在/不是您制作的'}, 400
-            else:
-                return {'error': '非法请求'}, 403
-        else:
-            return {'error': '用户未登录'}, 401
-    except Exception as e:
-        return {'error': '分享失败'}, 500
-
 # 从uid获得uname
-@app.route('/uname', methods=['GET'])
+@user_bp.route('/uname', methods=['GET'])
 def get_uname_from_uid():
     try:
         uid = request.args.get('uid', default=None)
@@ -150,10 +80,11 @@ def get_uname_from_uid():
         else:
             return {'error': '未找到'}, 400
     except Exception as e:
+        print('[error] uname >', str(e))
         return {'error': '查询出错'}, 500
     
 # 从uuid登录
-@app.route('/login', methods=['GET'])
+@user_bp.route('/login', methods=['GET'])
 def get_login():
     try:
         x_ident = request.headers.get('X-IDENT')
@@ -165,10 +96,11 @@ def get_login():
         else:
             return {'error': '未找到'}, 400
     except Exception as e:
+        print('[error] login >', str(e))
         return {'error': '查询出错'}, 500
     
 # 点赞
-@app.route('/like', methods=['POST'])
+@user_bp.route('/like', methods=['POST'])
 def post_plg_like():
     try:
         x_ident = request.headers.get('X-IDENT')
@@ -195,10 +127,11 @@ def post_plg_like():
         else:
             return {'error': '未登录用户'}, 401
     except Exception as e:
+        print('[error] like >', str(e))
         return {'error': '服务器出错了'}, 500
 
 # 踩
-@app.route('/dislike', methods=['POST'])
+@user_bp.route('/dislike', methods=['POST'])
 def post_plg_dislike():
     try:
         x_ident = request.headers.get('X-IDENT')
@@ -218,10 +151,11 @@ def post_plg_dislike():
         else:
             return {'error': '未登录用户'}, 401
     except Exception as e:
+        print('[error] dislike >', str(e))
         return {'error': '服务器出错了'}, 500
 
 # 通过uid获取用户名
-@app.route('/unamelist', methods=['POST'])
+@user_bp.route('/unamelist', methods=['POST'])
 def post_get_uname_list():
     try:
         x_ident = request.headers.get('X-IDENT')
@@ -238,7 +172,5 @@ def post_get_uname_list():
         else:
             return {'error': '未登录用户'}, 401
     except Exception as e:
+        print('[error] unamelist >', str(e))
         return {'error': '服务器查询出错'}, 500
-
-# if __name__ == '__main__':
-#   app.run(debug=False, port=9999)

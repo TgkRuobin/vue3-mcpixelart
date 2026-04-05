@@ -1,23 +1,17 @@
-from utils.db import query, exec
-from utils.net import get_ip, get_uid_from_uuid, new_art
-from flask import Flask, request, jsonify,Response
+from utils.net import new_art
+from flask import Blueprint, request, jsonify
 from litemapy import Region, BlockState
-# from flask_cors import CORS
+
 import pickle
 import time
 import uuid
 import gzip
 import os
-import mysql.connector
-from mysql.connector import Error
-app = Flask(__name__)
-# CORS(app)
-# def is_iterable(obj):
-#   try:
-#     iter(obj)
-#     return True
-#   except TypeError:
-#     return False
+
+enhance_bp = Blueprint('/', __name__)
+
+STATIC_FOLDER = os.getenv('STATIC_FOLDER')
+ENHANCE_MAX_LEN = os.getenv('ENHANCE_MAX_LEN')
     
 def get_unique_filename():
     extension = '.litematic'
@@ -25,7 +19,7 @@ def get_unique_filename():
     unique_filename = f"{timestamp}{uuid.uuid4()}{extension}"
     return unique_filename
 
-@app.route('/pixelartEnhance', methods=['POST'])
+@enhance_bp.route('/pixelartEnhance', methods=['POST'])
 def scu_post():
   try:
     data = request.get_json()
@@ -35,25 +29,24 @@ def scu_post():
       h = data['size']['height']
       reg = Region(0,0,0,w,h,l)
       pipe = data['pipe']
-      if len(pipe) > 128 * 3 * 128 * 2:
+      if len(pipe) > ENHANCE_MAX_LEN:
         return jsonify({'error': f'尺寸太大了!!无效请求'}), 400
       for item in pipe:
         reg[tuple(item[0])] = BlockState(item[1])
       schem = reg.as_schematic(name="Unnamed art", author="mcpixelart.com", description="Create your art of mc online.")
       fname = get_unique_filename()
-      schem.save(os.path.join('/mcpixelart/enhance',fname))
+      schem.save(os.path.join(STATIC_FOLDER, 'enhance', fname))
 
       x_ident = request.headers.get('X-IDENT')
       if not x_ident:
           x_ident = ''
       new_art('enhance', fname,x_ident)
       #备份
-      with gzip.open(os.path.join('/mcpixelart/enhance_backup',fname), 'wb') as f:
+      with gzip.open(os.path.join(STATIC_FOLDER, 'enhance_backup', fname), 'wb') as f:
         pickle.dump(data, f)
       return jsonify({'url': fname}), 200
     else:
       return jsonify({'error': f'无效请求'}), 400
   except Exception as e:
-    return jsonify({'error': str(e)}), 400
-
-# app.run(port=9979, debug=False)
+    print('[error] enhance >', str(e))
+    return jsonify({'error': '生成失败'}), 400

@@ -1,17 +1,16 @@
-from utils.db import query, exec
-from utils.net import get_ip, get_uid_from_uuid, new_art, get_unique_filename
-from flask import Flask, request, jsonify,Response
+from utils.net import new_art, get_unique_filename
+from flask import Blueprint, request, jsonify
 from litemapy import Region, BlockState
-# from flask_cors import CORS
+
 import pickle
-import time
-import uuid
 import gzip
 import os
 import re
 
-app = Flask(__name__)
-# CORS(app)
+pixelart_bp = Blueprint('/', __name__)
+
+STATIC_FOLDER = os.getenv('STATIC_FOLDER')
+PIXEL_MAX_LEN = os.getenv('PIXEL_MAX_LEN')
 
 def rotate90(matrix):  
     return [list(reversed(row)) for row in zip(*matrix)]
@@ -55,43 +54,44 @@ def create2dlite(data,dir,rot):
     schem = reg.as_schematic(name="Unnamed Pixel Art", author="mcpixelart.com", description="Create your art of mc online.")
     fname = get_unique_filename()
 
-    schem.save('/mcpixelart/lite/' + fname)
+    schem.save(os.path.join(STATIC_FOLDER, 'lite', fname))
     return fname
+
 def check_matrix(variable):
     '''检查图像合法性'''
     # 首先检查变量是否是列表
     if not isinstance(variable, list):
         return False, "格式错误"
-      
+
     # 检查列表中的每个元素是否也是列表（即二维矩阵）
     if not all(isinstance(row, list) for row in variable):
         return False, "图片无效"
-      
+
     # 获取矩阵的行数和列数  
     num_rows = len(variable)
     if num_rows == 0:  # 空列表不是有效的矩阵
         return False, "空图像"
-      
+
     num_cols = len(variable[0])  # 假设所有行都有相同的列数
-      
+
     # 检查每一行的列数是否相同
     if not all(len(row) == num_cols for row in variable):
         return False, "图片无效"
-      
-    # 检查矩阵的每一维的大小是否在 1 到 3072 之间
-    maxSize = 3072
-    if not (1 <= num_rows <= maxSize and 1 <= num_cols <= maxSize):
-        return False, f"尺寸超出了{maxSize}px"
+
+    # 检查矩阵的每一维的大小是否在 1 到 PIXEL_MAX_LEN 之间
+    if not (1 <= num_rows <= PIXEL_MAX_LEN and 1 <= num_cols <= PIXEL_MAX_LEN):
+        return False, f"尺寸超出了{PIXEL_MAX_LEN}px"
     # print(f"Image size:{num_cols}*{num_rows}")
     return True, '图像正确'
+
 def backup_img(fname,arr):
     '''以二维数组方式保存该图片'''
-    fpath = os.path.join('/mcpixelart/image_backup',fname)
+    fpath = os.path.join(STATIC_FOLDER, 'image_backup', fname)
     with gzip.open(fpath, 'wb') as f:
         pickle.dump(arr, f)
     return fpath
 
-@app.route('/pixelart', methods=['POST'])
+@pixelart_bp.route('/pixelart', methods=['POST'])
 def pixel_post():
     try:
         data = request.get_json()
@@ -107,7 +107,7 @@ def pixel_post():
             rot = data['rot']
             if not rot in [0,90,180,270]:
                 return jsonify({'error': '无效角度'}), 400
-        
+
         if 'art' in data:
             array = data['art']
             is_array_valid, check_msg = check_matrix(array)
@@ -126,13 +126,14 @@ def pixel_post():
         else:
             return jsonify({'error': '无效请求'}), 400
     except Exception as e:
-        print(str(e))
+        print('[error] pixelart >', str(e))
         return jsonify({'error': f'请求失败'}), 400
 
 def backup_scu(fname,arr):
     '''以数组方式保存该雕塑'''
-    with gzip.open(os.path.join('/mcpixelart/sculpture_backup',fname), 'wb') as f:
+    with gzip.open(os.path.join(STATIC_FOLDER, 'sculpture_backup', fname), 'wb') as f:
         pickle.dump(arr, f)
+
 def check_3d(data):
     '''检查雕塑数据格式有效性'''
     MAX_VALUE = 500    # 单个维度最大值
@@ -140,7 +141,6 @@ def check_3d(data):
         return False, '非法数据'
     if len(data) == 0:
         return False, '空的雕塑'
-      
     # 遍历列表中的每个元素  
     for element in data:  
         # 检查元素是否是包含三个元素的列表  
@@ -151,9 +151,9 @@ def check_3d(data):
         for value in element:  
             if not isinstance(value, int) or value < 0 or value > MAX_VALUE:  
                 return False, f'超出{MAX_VALUE}范围'
-      
     # 如果所有检查都通过，则返回True  
     return True, 'ok'
+
 def get3dsize(data):
     '''得到三维尺寸'''
     x_coords, y_coords, z_coords = zip(*data)   
@@ -161,6 +161,7 @@ def get3dsize(data):
     max_point = [max(x_coords), max(y_coords), max(z_coords)]
     dimensions = [int(max_coord - min_coord + 1) for max_coord, min_coord in zip(max_point, min_point)] 
     return dimensions
+
 def create3dlite(data):
     size = get3dsize(data)
     reg = Region(0,0,0,size[0],size[1],size[2])
@@ -172,14 +173,13 @@ def create3dlite(data):
     for pos in data:
         reg[pos[0],pos[1],pos[2]] = stone
     schem.save(os.path.join('..','scu',fname))
-    
     return fname
 
-@app.route('/sculpture', methods=['POST'])
+@pixelart_bp.route('/sculpture', methods=['POST'])
 def scu_post():
     try:
         data = request.get_json()
-        
+
         if 'scu' in data:
             array = data['scu']
             is_valid,desp = check_3d(array)
@@ -190,33 +190,32 @@ def scu_post():
             x_ident = request.headers.get('X-IDENT')
             if not x_ident:
                 x_ident = ''
-            
+
             backup_scu(name_cb,array)
             new_art('sculpture', name_cb,x_ident)
             return jsonify({'url': name_cb})
         else:
             return jsonify({'error': '无效请求'}), 400
     except Exception as e:
+        print('[error] sculpture >', str(e))
         return jsonify({'error': f'请求失败'}), 400
 
-
-@app.route('/reload', methods=['GET'])
+@pixelart_bp.route('/reload', methods=['GET'])
 def reload():
-    fname = request.args.get('fname', '')
-    #检查文件名合法性
-    VALID_FILENAME_CHARS = re.compile(r'^[A-Za-z0-9-]+$')
-    if not VALID_FILENAME_CHARS.match(fname):
-        return jsonify({"error": "错误的链接"}), 400
+    try:
+        fname = request.args.get('fname', '')
+        #检查文件名合法性
+        VALID_FILENAME_CHARS = re.compile(r'^[A-Za-z0-9-]+$')
+        if not VALID_FILENAME_CHARS.match(fname):
+            return jsonify({"error": "错误的链接"}), 400
 
-    fpath = os.path.join('/mcpixelart/image_backup/', fname + '.litematic')
-    if os.path.exists(fpath):
-        with gzip.open(fpath, 'rb') as f:
-            arr_loaded = pickle.load(f)
-        return jsonify({"image": arr_loaded}), 200
-    else:
-        return jsonify({"error": "链接不存在"}), 404
-
-
-# app.run(port=9969, debug=False)
-
-
+        fpath = os.path.join(STATIC_FOLDER, 'image_backup/', fname + '.litematic')
+        if os.path.exists(fpath):
+            with gzip.open(fpath, 'rb') as f:
+                arr_loaded = pickle.load(f)
+            return jsonify({"image": arr_loaded}), 200
+        else:
+            return jsonify({"error": "链接不存在"}), 404
+    except Exception as e:
+        print('[error] reload >', str(e))
+        return jsonify({'error': f'请求失败'}), 400

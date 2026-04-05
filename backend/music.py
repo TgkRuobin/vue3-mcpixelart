@@ -1,20 +1,19 @@
-from utils.db import query, exec
-from utils.net import get_ip, get_uid_from_uuid, new_art, get_unique_filename
-from flask import Flask, request, jsonify,Response
+from utils.net import new_art, get_unique_filename
+from flask import Blueprint, request, jsonify
 from litemapy import Region, BlockState
 import pickle
 import gzip
 import os
 import math
 
-app = Flask(__name__)
-# from flask_cors import CORS
-# CORS(app)
+music_bp = Blueprint('/', __name__)
+
+STATIC_FOLDER = os.getenv('STATIC_FOLDER')
 
 # 最大音轨数
-MAX_TRACKS = 20
+MAX_TRACKS = os.getenv('MUSIC_MAX_TRACKS')
 # 投影最长长度
-MAX_LENGTH = 10000
+MAX_LENGTH = os.getenv('MUSIC_MAX_LEN')
 
 # 辅助方块
 auxiliary = BlockState('minecraft:stone')
@@ -164,7 +163,7 @@ def makeTrack(reg, data, offsetX, offsetY):
         direction = 'up'
       i += 1
 
-@app.route('/musicGen', methods=['POST'])
+@music_bp.route('/musicGen', methods=['POST'])
 def music_post():
   try:
     data = request.get_json()
@@ -184,22 +183,20 @@ def music_post():
     for i in range(n):
       ox, oy = offsets[i]
       makeTrack(reg, data[i], ox, oy)
-      
-    schem = reg.as_schematic(name="Unnamed music", author="mcpixelart.com", description="Create your music of mc online.")
-    fname = get_unique_filename()
-    schem.save(os.path.join('/mcpixelart/music',fname))
 
+    schem = reg.as_schematic(name="Unnamed music", author="mcpixelart.com", description="Create your art of mc online.")
+    fname = get_unique_filename()
+    schem.save(os.path.join(STATIC_FOLDER, 'music', fname))
 
     x_ident = request.headers.get('X-IDENT')
     if not x_ident:
         x_ident = ''
     new_art('music', fname,x_ident)
     # 备份
-    with gzip.open(os.path.join('/mcpixelart/music_backup',fname), 'wb') as f:
+    with gzip.open(os.path.join(STATIC_FOLDER, 'music_backup', fname), 'wb') as f:
       pickle.dump(data, f)
     return jsonify({'url': fname}), 200
 
   except Exception as e:
-    return jsonify({'error': f'制作出错\n{e}'}), 400
-
-# app.run(port=9979, debug=False)
+    print('[error] musicGen >', str(e))
+    return jsonify({'error': f'制作出错'}), 400
