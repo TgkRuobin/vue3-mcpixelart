@@ -8,7 +8,7 @@ logger = logging.getLogger('gunicorn.error')
 
 share_bp = Blueprint('share', __name__, url_prefix='/share')
 
-FEED_MAX_LEN = os.getenv('FEED_MAX_LEN')
+FEED_MAX_LEN = int(os.getenv('FEED_MAX_LEN'))
 
 # feed
 @share_bp.route('/feed', methods=['GET'])

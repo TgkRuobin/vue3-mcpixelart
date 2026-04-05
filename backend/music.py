@@ -15,9 +15,9 @@ music_bp = Blueprint('music', __name__, url_prefix='/')
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
 
 # 最大音轨数
-MAX_TRACKS = os.getenv('MUSIC_MAX_TRACKS')
+MAX_TRACKS = int(os.getenv('MUSIC_MAX_TRACKS'))
 # 投影最长长度
-MAX_LENGTH = os.getenv('MUSIC_MAX_LEN')
+MAX_LENGTH = int(os.getenv('MUSIC_MAX_LEN'))
 
 # 辅助方块
 auxiliary = BlockState('minecraft:stone')

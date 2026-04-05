@@ -15,7 +15,7 @@ logger = logging.getLogger('gunicorn.error')
 enhance_bp = Blueprint('enhance', __name__, url_prefix='/')
 
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
-ENHANCE_MAX_LEN = os.getenv('ENHANCE_MAX_LEN')
+ENHANCE_MAX_LEN = int(os.getenv('ENHANCE_MAX_LEN'))
     
 def get_unique_filename():
     extension = '.litematic'

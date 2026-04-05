@@ -14,7 +14,7 @@ logger = logging.getLogger('gunicorn.error')
 pixelart_bp = Blueprint('pixelart', __name__, url_prefix='/')
 
 STATIC_FOLDER = os.getenv('STATIC_FOLDER')
-PIXEL_MAX_LEN = os.getenv('PIXEL_MAX_LEN')
+PIXEL_MAX_LEN = int(os.getenv('PIXEL_MAX_LEN'))
 
 def rotate90(matrix):  
     return [list(reversed(row)) for row in zip(*matrix)]
