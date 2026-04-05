@@ -33,6 +33,7 @@ gunicorn --daemon \
          --bind 0.0.0.0:$PORT \
          --access-logfile ./access.log \
          --error-logfile ./error.log \
+         --capture-output \
          compose:app
 
 if [ $? -eq 0 ]; then
