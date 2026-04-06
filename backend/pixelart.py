@@ -176,7 +176,7 @@ def create3dlite(data):
     stone = BlockState('minecraft:stone')
     for pos in data:
         reg[pos[0],pos[1],pos[2]] = stone
-    schem.save(os.path.join('..','scu',fname))
+    schem.save(os.path.join(STATIC_FOLDER,'scu',fname))
     return fname
 
 @pixelart_bp.route('/sculpture', methods=['POST'])

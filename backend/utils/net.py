@@ -19,7 +19,7 @@ def get_ip(req):
   else:
     client_ip = req.headers.get('X-Real-IP', '')
   if not client_ip:
-    client_ip = req.remote_add
+    client_ip = req.remote_addr
   return client_ip
 
 def new_art(type,name,uuid):
