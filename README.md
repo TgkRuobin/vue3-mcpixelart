@@ -1,5 +1,10 @@
 # MCPixelArt - Minecraft 像素画/地图画、雕塑和红石音乐在线制作与分享平台
 
+** 存档声明
+🚨 2026/06/20 线上项目发布了彻底重构后的版本
+
+该仓库（旧版）已停止维护与更新。我使用了全新的架构对项目进行了**彻底重构**，并移至了新仓库（目前闭源）。
+
 **MCPixelArt** 是一个专注于 Minecraft 像素画/地图画、雕塑和红石音乐创作的在线平台。用户可以通过我们的工具轻松设计和分享自己的作品，无论是像素画、雕塑还是复杂的红石音乐，都能在这里找到灵感和工具。
 
 This project is a platform dedicated to the online creation and sharing of Minecraft pixel art, sculptures, and redstone music, encompassing a complete frontend and backend.
@@ -30,10 +35,26 @@ This project is a platform dedicated to the online creation and sharing of Minec
    - 用户可以将自己的作品上传到平台，与其他玩家分享。  
    - 您可预览和下载其他用户分享的作品，或者为好的作品点赞！ 
 
-## 使用教程
+## 操作教程
 
 我准备了详细的教学视频，欢迎访问 B站主页观看: 
-- [我的Bilibili主页](https://space.bilibili.com/1019826327)  
+- [我的Bilibili主页](https://space.bilibili.com/1019826327)
+
+## 项目启动
+
+```sh
+# 后端项目启动
+cd backend
+sh build.sh
+sh run.sh
+
+# 前端项目启动
+cd ../
+pnpm i
+pnpm dev
+
+# 投影文件会生成在 .env 的 STATIC_FOLDER 中
+```
 
 ## 技术栈
 
@@ -44,11 +65,6 @@ This project is a platform dedicated to the online creation and sharing of Minec
 ## 开发中遇到的问题和难点的解决思路
 
 在[thought.md](thought.md)中做了详细记载
-
-## 如何贡献
-
-如果您对项目感兴趣，欢迎贡献代码或提出建议！
-- **问题反馈**: 请在 GitHub Issues 中提交问题或建议。  
 
 ## 联系我
 
